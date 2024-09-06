@@ -94,8 +94,17 @@ public class draw_reader {
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         canvas.drawColor(backgroundcolor);
+        //异常处理: 为0长度,判断未完成加载
+        if(page.size() == 0){
+            canvas.drawText("[正在加载文件]", 0, font_height, paint);
+            return bitmap;
+        }
         //换行制作（
         String[] lines = page.get(index).split("\n");
+        if(lines.length == 0){
+            canvas.drawText(page.get(index), 0, font_height, paint);
+            return bitmap;
+        }
         int i = 1;
         for (String line : lines) {
             canvas.drawText(line, 0, i*font_height, paint);

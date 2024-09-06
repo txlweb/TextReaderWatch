@@ -56,9 +56,11 @@ public class draw_select {
             Bitmap newBitmap = Bitmap.createBitmap(w,h , Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(newBitmap);
             canvas.drawColor(Color.RED);
-            canvas.drawText("[TextReader Watch Edition]  By.IDlike Vre.1.0.179b",10,30,paint_bk30);
             paint_bk30.setTextSize(100);
-            canvas.drawText("初始化...",50,30,paint_bk30);
+            paint_bk30.setColor(Color.BLACK);
+            //canvas.drawText("[TextReader Watch Edition]  By.IDlike Vre.1.0.179b",10,30,paint_bk30);
+            canvas.drawText("[正在加载文件]",50,100,paint_bk30);
+            paint_bk30.setTextSize(30);
             return newBitmap;
         }
         if(inited){
@@ -112,7 +114,7 @@ public class draw_select {
             if(selected == page*pagein+(y-40)/40){
                 //inital main view
                 if(selected>=0 && selected<texts.size()) {
-                    //ready = true;
+                    ready = true;
                     readerMain.init(tmp + "/" + texts.get(selected), ct);
                     inited = true;
                     ready = false;

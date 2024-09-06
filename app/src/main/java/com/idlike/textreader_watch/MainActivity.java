@@ -1,9 +1,14 @@
 package com.idlike.textreader_watch;
 
+import static com.idlike.textreader_watch.draw_select.paint_bk30;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -40,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     float oncreater_x = 0;
     float oncreater_y = 0;
     boolean can_page = true;
+    long no_click_time = 0;
+    int float_fps = 30;
     String save_name = "normal.txt";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("导入TXT");
         final EditText input = new EditText(this);
         input.setHint("请输入导入后存储的名字");
+        input.setText("normal.txt");
         builder.setView(input);
         builder.setPositiveButton("导入TXT(自动加后缀)", new DialogInterface.OnClickListener() {
             @Override
@@ -88,6 +96,48 @@ public class MainActivity extends AppCompatActivity {
         draw_select dd = new draw_select();
         dd.init(this);
 
+
+
+        Handler handler = new Handler();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                long startTime = System.nanoTime();
+                Bitmap basemap = dd.draw();
+                Bitmap newBitmap = Bitmap.createBitmap(basemap.getWidth(), basemap.getHeight(), Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(newBitmap);
+                canvas.drawBitmap(basemap, 0, 0, null);
+                long endTime = System.nanoTime();
+                int fps = (int)(1 / (double) ((endTime - startTime)/ 1e9));
+                no_click_time+=1000/float_fps;
+                if(no_click_time<1000){
+                    canvas.drawText(fps+"/"+float_fps+" FPS ",10,50,paint_bk30);
+                } else if (no_click_time<500) {
+                    canvas.drawText("<20 FPS [*节能中 R1]",10,50,paint_bk30);
+                }  else if (no_click_time<5000) {
+                    canvas.drawText("<10 FPS [*节能中 R1]",10,50,paint_bk30);
+                } else if(no_click_time<10000){
+                    canvas.drawText("< 5 FPS [*节能中 R2]",10,50,paint_bk30);
+                }else{
+                    canvas.drawText("-- FPS [*Draw已暂停]",10,50,paint_bk30);
+                }
+                if(no_click_time<500) float_fps = 30;
+                if(no_click_time>=500) float_fps = 20;
+                if(no_click_time>=1000) float_fps = 10;
+                if(no_click_time>=5000) float_fps = 5;
+                if(no_click_time>=10000) float_fps = 1;
+
+                imageView.setImageBitmap(newBitmap);
+                //超出10秒不再绘制,需要等待OnClick后立刻绘制
+                if(no_click_time<10000) handler.postDelayed(this, 1000/float_fps);
+                //}
+                // 再次调用postDelayed以重复执行
+                 // 1000毫秒后再次执行
+
+            }
+        };
+        handler.postDelayed(runnable, 0); // 首次执行延迟1000毫秒
+
         imageView.setOnTouchListener(
                 new View.OnTouchListener() {
                     @Override
@@ -95,24 +145,21 @@ public class MainActivity extends AppCompatActivity {
                         float x = event.getX();
                         float y = event.getY();
                         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                            dd.OnClick((int) x, (int) y);
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    dd.OnClick((int) x, (int) y);
+                                }
+                            }).start();
+
                         }
+                        if(no_click_time>10000){
+                            handler.postDelayed(runnable, 100);
+                        }
+                        no_click_time=0;
                         return true;
                     }
                 });
-
-        Handler handler = new Handler();
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                // 这里放置你要重复执行的代码
-                imageView.setImageBitmap(dd.draw());
-                // 再次调用postDelayed以重复执行
-                handler.postDelayed(this, 100); // 1000毫秒后再次执行
-            }
-        };
-        handler.postDelayed(runnable, 100); // 首次执行延迟1000毫秒
-
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
@@ -129,14 +176,22 @@ public class MainActivity extends AppCompatActivity {
                 if(x-oncreater_x>2){//左
                     if(can_page) dd.left();
                     can_page=false;
+                    if(no_click_time>10000){
+                        handler.postDelayed(runnable, 100);
+                    }
+                    no_click_time=0;
                 }
                 if(x-oncreater_x<-2){//右
                     if(can_page) dd.right();
                     can_page=false;
+                    if(no_click_time>10000){
+                        handler.postDelayed(runnable, 100);
+                    }
+                    no_click_time=0;
                 }
                 //保证一次旋转只会触发一次翻页
                 if(x-oncreater_x>-2&&x-oncreater_x<2){
-                    can_page = true;
+                    //can_page = true;
                 }
             }
 

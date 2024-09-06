@@ -54,9 +54,14 @@ public class draw_list {
         }
         return newBitmap;
     }
-    public void Onclick(int x,int y){
+    public boolean Onclick(int x,int y){
         if(y<h-40&&y>40){
+            if(selected == page*pagein+(y-40)/40){
+                draw_reader_main.paint_bk30.setColor(Color.BLACK);
+                return true;
+            }
             selected = page*pagein+(y-40)/40;
+
             System.out.println(selected);
         }
         if(y>h-40){
@@ -66,5 +71,6 @@ public class draw_list {
                 if((page+1)*pagein<chapters.size()) page+=1;
             }
         }
+        return false;
     }
 }

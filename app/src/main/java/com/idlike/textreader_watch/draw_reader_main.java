@@ -126,7 +126,9 @@ public class draw_reader_main {
                 return false;
             }
         }
-        new File(tmp+"/0.txt").delete();
+        if(new File(tmp+"/0.txt").length()<10) {
+            new File(tmp + "/0.txt").delete();
+        }
         //遍历目录，获取txt列表
         File[] files = new File(tmp).listFiles();
         for (File file : files) {
@@ -221,8 +223,8 @@ public class draw_reader_main {
             }
         }
         if(now_page == 1){
-            lister.Onclick(x,y);
-            if(y<40){
+
+            if(y<40 || lister.Onclick(x,y)){
                 now_page = 0;
                 if (lister.getSelected() > 0 && lister.getSelected() < chapters.size()) rerading_index = lister.getSelected();
                 reinit_and_save();
